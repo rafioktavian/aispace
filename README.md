@@ -1,4 +1,4 @@
-# Project Title AISpace
+# Project AISpace
 
 A brief description of your project and what it does. (Replace with your project's description)
 
