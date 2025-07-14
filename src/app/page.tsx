@@ -104,18 +104,30 @@ export default function Home() {
     if (!input.trim() || isPending) return;
 
     const userInput = input;
+    const currentMessages = [...messages, { id: crypto.randomUUID(), role: 'user' as const, content: userInput }];
+    setMessages(currentMessages);
     setInput('');
-    addMessage('user', userInput);
+    
     const assistantMessageId = addMessage('assistant', '');
 
     startTransition(async () => {
-      const history: HistoryMessage[] = messages.filter(m => typeof m.content === 'string').map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        content: m.content as string,
-      }));
+      const history: HistoryMessage[] = currentMessages
+        .filter(m => typeof m.content === 'string' && m.role === 'user')
+        .map(m => ({
+          role: 'user',
+          content: m.content as string,
+        }));
+      
+      // Also add previous valid assistant messages to history
+      messages.forEach(m => {
+        if (m.role === 'assistant' && typeof m.content === 'string' && m.content.length > 0) {
+          history.push({ role: 'model', content: m.content });
+        }
+      });
+
 
       try {
-        const stream = await generateChatResponseAction(userInput, history);
+        const stream = await generateChatResponseAction(userInput, history.slice(0, -1));
         for await (const chunk of stream) {
           updateMessage(assistantMessageId, chunk.text ?? '');
         }
