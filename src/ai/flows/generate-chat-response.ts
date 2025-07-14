@@ -1,47 +1,26 @@
-// This file is machine-generated - edit at your own risk!
-
 'use server';
 
 /**
- * @fileOverview An AI agent that generates chat responses.
+ * @fileOverview An AI agent that generates chat responses, maintaining conversation history.
  *
- * - generateChatResponse - A function that generates chat responses.
- * - GenerateChatResponseInput - The input type for the generateChatResponse function.
- * - GenerateChatResponseOutput - The return type for the generateChatResponse function.
+ * - generateChatResponseStream - A function that generates a streaming chat response.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import type { GenerateChatResponseInput } from '@/lib/types';
 
-const GenerateChatResponseInputSchema = z.object({
-  prompt: z.string().describe('The prompt to generate a chat response for.'),
-});
-export type GenerateChatResponseInput = z.infer<typeof GenerateChatResponseInputSchema>;
+export async function generateChatResponseStream(input: GenerateChatResponseInput) {
+  const {stream} = await ai.generate({
+    model: 'googleai/gemini-2.5-flash-preview',
+    prompt: [
+      {
+        text: `You are a helpful and friendly AI assistant. Respond to the user's prompt in a conversational manner.`,
+      },
+      ...input.history.map(msg => ({text: msg.content, role: msg.role})),
+      {text: input.prompt},
+    ],
+    stream: true,
+  });
 
-const GenerateChatResponseOutputSchema = z.object({
-  response: z.string().describe('The generated chat response.'),
-});
-export type GenerateChatResponseOutput = z.infer<typeof GenerateChatResponseOutputSchema>;
-
-export async function generateChatResponse(input: GenerateChatResponseInput): Promise<GenerateChatResponseOutput> {
-  return generateChatResponseFlow(input);
+  return stream;
 }
-
-const generateChatResponsePrompt = ai.definePrompt({
-  name: 'generateChatResponsePrompt',
-  input: {schema: GenerateChatResponseInputSchema},
-  output: {schema: GenerateChatResponseOutputSchema},
-  prompt: `Generate a chat response for the following prompt: {{{prompt}}}`,
-});
-
-const generateChatResponseFlow = ai.defineFlow(
-  {
-    name: 'generateChatResponseFlow',
-    inputSchema: GenerateChatResponseInputSchema,
-    outputSchema: GenerateChatResponseOutputSchema,
-  },
-  async input => {
-    const {output} = await generateChatResponsePrompt(input);
-    return output!;
-  }
-);

@@ -3,7 +3,7 @@
 import { useState, useRef, useTransition, type FormEvent } from 'react';
 import Image from 'next/image';
 import { generateChatResponseAction, summarizeFileAction, summarizeImageAction } from './actions';
-import type { Message } from '@/lib/types';
+import type { Message, HistoryMessage } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { readFileAsDataURL } from '@/lib/utils';
 import { ChatLayout } from '@/components/chat-layout';
@@ -24,9 +24,22 @@ export default function Home() {
     ref.current?.click();
   };
 
-  const addMessage = (role: 'user' | 'assistant', content: React.ReactNode) => {
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role, content }]);
+  const addMessage = (role: 'user' | 'assistant', content: React.ReactNode, id?: string) => {
+    const messageId = id || crypto.randomUUID();
+    setMessages((prev) => [...prev, { id: messageId, role, content }]);
+    return messageId;
   };
+  
+  const updateMessage = (id: string, newContent: string) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === id) {
+        // If the existing content is a string, append. Otherwise, replace.
+        const content = typeof msg.content === 'string' ? msg.content + newContent : newContent;
+        return { ...msg, content };
+      }
+      return msg;
+    }));
+  }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -93,14 +106,23 @@ export default function Home() {
     const userInput = input;
     setInput('');
     addMessage('user', userInput);
+    const assistantMessageId = addMessage('assistant', '');
 
     startTransition(async () => {
-      const result = await generateChatResponseAction(userInput);
-      if (result.success) {
-        addMessage('assistant', result.response);
-      } else {
-        toast({ variant: 'destructive', title: 'Error', description: result.error });
-        setMessages(prev => prev.slice(0, -1));
+      const history: HistoryMessage[] = messages.filter(m => typeof m.content === 'string').map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        content: m.content as string,
+      }));
+
+      try {
+        const stream = await generateChatResponseAction(userInput, history);
+        for await (const chunk of stream) {
+          updateMessage(assistantMessageId, chunk.text ?? '');
+        }
+      } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to get a response from the assistant.' });
+        setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
       }
     });
   };

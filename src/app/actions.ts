@@ -1,17 +1,12 @@
 'use server';
 
-import { generateChatResponse } from '@/ai/flows/generate-chat-response';
+import { generateChatResponseStream } from '@/ai/flows/generate-chat-response';
+import type { HistoryMessage } from '@/lib/types';
 import { summarizeFile } from '@/ai/flows/summarize-file';
 import { summarizeImage } from '@/ai/flows/summarize-image';
 
-export async function generateChatResponseAction(prompt: string) {
-  try {
-    const { response } = await generateChatResponse({ prompt });
-    return { success: true, response };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: 'Failed to generate chat response.' };
-  }
+export async function generateChatResponseAction(prompt: string, history: HistoryMessage[]) {
+    return generateChatResponseStream({ prompt, history });
 }
 
 export async function summarizeFileAction(fileDataUri: string) {
