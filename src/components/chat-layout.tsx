@@ -26,7 +26,7 @@ export function ChatLayout({ messages, isLoading, inputForm }: ChatLayoutProps) 
         <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2">
             <BotMessageSquare className="h-6 w-6 text-primary" />
-            Smart AI Chat
+            AI Space Chat
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">

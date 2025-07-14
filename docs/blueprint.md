@@ -1,4 +1,4 @@
-# **App Name**: Smart AI Chat
+# **App Name**: AI Space Chat
 
 ## Core Features:
 
