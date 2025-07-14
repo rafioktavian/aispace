@@ -11,7 +11,7 @@ import type { GenerateChatResponseInput } from '@/lib/types';
 
 export async function generateChatResponseStream(input: GenerateChatResponseInput) {
   const {stream} = await ai.generate({
-    model: 'googleai/gemini-pro',
+    model: 'googleai/gemini-1.5-flash-latest',
     prompt: [
       {
         text: `You are a helpful and friendly AI assistant. Respond to the user's prompt in a conversational manner.`,
