@@ -24,7 +24,6 @@ export async function generateChatResponse(input: GenerateChatResponseInput): Pr
 
 export async function generateChatResponseStream(input: GenerateChatResponseInput) {
   const {stream} = await ai.generate({
-    model: 'googleai/gemini-pro',
     prompt: [
       {
         text: `You are a helpful and friendly AI assistant. Respond to the user's prompt in a conversational manner.`,
@@ -62,7 +61,7 @@ const chatFlow = ai.defineFlow(
         outputSchema: ChatResponseSchema,
     },
     async (input) => {
-        const { output } = await chatPrompt(input);
+        const { output } = await prompt(input);
         return output!;
     }
 );
