@@ -19,26 +19,14 @@ type ChatResponse = z.infer<typeof ChatResponseSchema>;
 
 
 export async function generateChatResponse(input: GenerateChatResponseInput): Promise<ChatResponse> {
-    return chatFlow(input);
+  return chatFlow(input);
 }
 
-export async function generateChatResponseStream(input: GenerateChatResponseInput) {
-  const {stream} = await ai.generate({
-    prompt: [
-      {
-        text: `You are a helpful and friendly AI assistant. Respond to the user's prompt in a conversational manner.`,
-      },
-      ...input.history.map(msg => ({text: msg.content, role: msg.role})),
-      {text: input.prompt},
-    ],
-    stream: true,
-  });
-
-  return stream;
+export async function generateChatResponseStream(input: GenerateChatResponseInput): Promise<ReturnType<typeof chatFlow.stream>> {
+  return chatFlow.stream(input);
 }
 
-
-const chatPrompt = ai.definePrompt({
+const prompt = ai.definePrompt({
     name: 'chatPrompt',
     input: { schema: GenerateChatResponseInputSchema },
     output: { schema: ChatResponseSchema },
